@@ -1,6 +1,5 @@
 'use strict';
 
-const nco = require('nco');
 const semver = require('semver');
 
 //values from http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
@@ -8,7 +7,7 @@ const validRetentionInDays = [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 40
 
 class AwsAddLogRetention {
   constructor(serverless, options) {
-    if(!semver.satisfies(serverless.version, '>= 1.20.2')) {
+    if (!semver.satisfies(serverless.version, '>= 1.20.2')) {
       throw new Error('serverless-plugin-log-retention requires serverless 1.20.2 or higher');
     }
 
@@ -31,28 +30,25 @@ class AwsAddLogRetention {
 
   addLogRetentionForFunctions(globalLogRetentionInDays) {
     const service = this.serverless.service;
-    if(typeof service.functions !== 'object') {
+    const template = service.provider.compiledCloudFormationTemplate;
+    if (typeof service.functions !== 'object' || typeof template.Resources !== 'object') {
       return;
     }
-
-    const resources = nco(service.resources, {});
-    resources.Resources = nco(resources.Resources, {});
-
-    Object.keys(service.functions).forEach(functionName => {
-      const localLogRentationInDays = nco(service.functions[functionName].logRetentionInDays, null);
-      if(localLogRentationInDays === null && globalLogRetentionInDays === null) {
-        return;
-      }
-      const functionLogRetentionInDays = localLogRentationInDays === null ? globalLogRetentionInDays : this.sanitizeRetentionValue(localLogRentationInDays);
-      const logGroupLogicalId = this.provider.naming.getLogGroupLogicalId(functionName);
-
-      const resource = {
-        Type: 'AWS::Logs::LogGroup',
-        Properties: {
-          RetentionInDays: functionLogRetentionInDays
+    Object.keys(template.Resources).forEach((logGroupLogicalId) => {
+      const resource = template.Resources[logGroupLogicalId];
+      if (resource.Type === 'AWS::Logs::LogGroup') {
+        const functionName = Object.keys(service.functions).find(functionName => {
+          return this.provider.naming.getLogGroupLogicalId(functionName) === logGroupLogicalId;
+        });
+        if (!functionName) return;
+        const localLogRetentionInDays = service.functions[functionName].logRetentionInDays;
+        if (!localLogRetentionInDays && !globalLogRetentionInDays) {
+          return;
         }
-      };
-      resources.Resources[logGroupLogicalId] = resource;
+        resource.Properties.RetentionInDays = localLogRetentionInDays ?
+          this.sanitizeRetentionValue(localLogRetentionInDays) :
+          globalLogRetentionInDays;
+      }
     });
   }
 

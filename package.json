@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ArtificerEntertainment/serverless-plugin-log-retention.git"
+    "url": "git+https://github.com/romamd/serverless-plugin-log-retention.git"
   },
   "bugs": {
-    "url": "https://github.com/ArtificerEntertainment/serverless-plugin-log-retention/issues"
+    "url": "https://github.com/romamd/serverless-plugin-log-retention/issues"
   },
-  "homepage": "https://github.com/ArtificerEntertainment/serverless-plugin-log-retention",
+  "homepage": "https://github.com/romamd/serverless-plugin-log-retention",
   "keywords": [
     "serverless",
     "plugin",
@@ -23,7 +23,6 @@
   "author": "Artificer Entertainment",
   "license": "MIT",
   "dependencies": {
-    "nco": "1.0.1",
     "semver": "5.4.1"
   },
   "devDependencies": {
